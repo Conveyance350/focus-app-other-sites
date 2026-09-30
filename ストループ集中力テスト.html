@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ストループ集中力テスト</title>
+</head>
+<body>
+<style>
+
+  html, body { margin:0; padding:0; -webkit-text-size-adjust: 100%; }
+  .st-input { font-size: 16px; }
+  .st-btn, .st-choice { min-height: 44px; }
+  @media (max-width: 480px) {
+    .st-app { padding: 16px 14px 32px; }
+    .st-header h1 { font-size: 16px; }
+    .st-word { font-size: 32px; padding: 28px 0 18px; }
+    .st-choice { padding: 12px 16px; font-size: 15px; }
+    table.st-table { font-size: 12px; }
+    table.st-table th, table.st-table td { padding: 6px 4px; }
+  }
+
+  * { box-sizing: border-box; }
+  .st-app {
+    font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+    color: #1f2933;
+  }
+  .st-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid #1f4e79;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+  .st-header h1 { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: .02em; }
+  .st-header .st-sub { font-size: 12px; color: #64748b; }
+  .st-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .st-row label { font-size: 13px; color: #475569; white-space: nowrap; }
+  .st-input {
+    border: 1px solid #cbd5e1; border-radius: 4px; padding: 7px 10px; font-size: 14px;
+    flex: 1; min-width: 140px;
+  }
+  .st-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+  .st-tab {
+    padding: 9px 16px; font-size: 13px; cursor: pointer; border: none; background: none;
+    color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .st-tab.active { color: #1f4e79; border-bottom-color: #1f4e79; font-weight: 700; }
+  .st-panel { display: none; }
+  .st-panel.active { display: block; }
+  .st-card {
+    border: 1px solid #e2e8f0; border-radius: 6px; padding: 18px; margin-bottom: 18px; background: #fafbfc;
+  }
+  .st-btn {
+    background: #1f4e79; color: #fff; border: none; border-radius: 4px;
+    padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .st-btn:hover { background: #163a5c; }
+  .st-btn.secondary { background: #fff; color: #1f4e79; border: 1px solid #1f4e79; }
+  .st-stat { font-size: 22px; font-weight: 700; color: #1f4e79; font-variant-numeric: tabular-nums; }
+  .st-word {
+    text-align: center; font-size: 44px; font-weight: 700; padding: 40px 0 24px; user-select: none;
+  }
+  .st-choices { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .st-choice {
+    border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px 20px; font-size: 14px;
+    background: #fff; cursor: pointer; font-weight: 600;
+  }
+  .st-choice:hover { border-color: #1f4e79; }
+  .st-progressbar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+  .st-progressfill { height: 100%; background: #1f4e79; width: 0%; transition: width .15s linear; }
+  table.st-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.st-table th, table.st-table td {
+    text-align: left; padding: 7px 8px; border-bottom: 1px solid #e2e8f0;
+  }
+  table.st-table th { color: #64748b; font-weight: 600; font-size: 12px; }
+  .st-empty { color: #94a3b8; font-size: 13px; padding: 12px 0; }
+  .st-note { font-size: 12px; color: #64748b; margin-top: 10px; }
+  .st-result-flash { font-size: 13px; margin-top: 8px; min-height: 18px; }
+</style>
+
+<div class="st-app">
+  <div class="st-header">
+    <h1>ストループ集中力テスト</h1>
+    <span class="st-sub">構内物流課</span>
+  </div>
+
+  <div class="st-row">
+    <label for="st-name">氏名</label>
+    <input type="text" id="st-name" class="st-input" placeholder="氏名を入力してください" autocomplete="off">
+  </div>
+
+  <div class="st-tabs">
+    <button class="st-tab active" data-tab="test">テスト</button>
+    <button class="st-tab" data-tab="history">記録一覧</button>
+  </div>
+
+  <div class="st-panel active" id="panel-test">
+    <div class="st-card">
+      <div class="st-note">文字の「意味」ではなく「文字色」を、下のボタンから選んでタップしてください。全20問。</div>
+      <div class="st-row" style="justify-content:space-between; margin-top:10px;">
+        <div class="st-stat" id="st-progress">0 / 20</div>
+        <div class="st-stat" id="st-score">正答 0</div>
+      </div>
+      <div class="st-progressbar"><div class="st-progressfill" id="st-progressfill"></div></div>
+      <div class="st-word" id="st-word">開始を押してください</div>
+      <div class="st-choices" id="st-choices"></div>
+      <div class="st-row">
+        <button class="st-btn" id="st-start">開始</button>
+      </div>
+      <div class="st-result-flash" id="st-flash"></div>
+      <div class="st-note" id="st-result"></div>
+    </div>
+  </div>
+
+  <div class="st-panel" id="panel-history">
+    <div class="st-card">
+      <div class="st-row" style="justify-content:space-between;">
+        <div style="font-size:13px; color:#475569;">全員の記録（社内PCで共有表示）</div>
+        <div style="display:flex; gap:8px;">
+          <button class="st-btn secondary" id="history-export">CSV出力</button>
+          <button class="st-btn secondary" id="history-refresh">更新</button>
+        </div>
+      </div>
+      <div id="history-body">
+        <div class="st-empty">読み込み中…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+  const COLORS = [
+    { name: '赤', hex: '#dc2626' },
+    { name: '青', hex: '#2563eb' },
+    { name: '緑', hex: '#16a34a' },
+    { name: '黄', hex: '#ca8a04' }
+  ];
+  const TOTAL_Q = 20;
+
+  $$('.st-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.st-tab').forEach(t => t.classList.remove('active'));
+      $$('.st-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $('#panel-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'history') loadHistory();
+    });
+  });
+
+
+
+  const getName = () => ($('#st-name').value.trim() || null);
+
+  const STORE_KEY = 'ct_records_v1';
+
+  function readRecords() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      console.error('読み込みエラー', e);
+      return [];
+    }
+  }
+
+  function writeRecords(records) {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(records));
+      return true;
+    } catch (e) {
+      console.error('保存エラー', e);
+      return false;
+    }
+  }
+
+  function saveRecord(type, scoreValue, extra) {
+    const name = getName();
+    if (!name) return false;
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
+    const payload = { name, type, scoreValue, extra: extra || '', date: dateStr, ts: now.getTime() };
+    const records = readRecords();
+    records.push(payload);
+    return writeRecords(records);
+  }
+
+  let qIndex = 0;
+  let correctCount = 0;
+  let currentAnswer = null;
+  let qStartTime = null;
+  let reactionTimes = [];
+  let running = false;
+
+  function nextQuestion() {
+    if (qIndex >= TOTAL_Q) { finishTest(); return; }
+    buildChoiceButtons();
+    const wordColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    let labelColor;
+    // 50% congruent is too easy; bias toward incongruent for real interference
+    if (Math.random() < 0.25) {
+      labelColor = wordColor;
+    } else {
+      do { labelColor = COLORS[Math.floor(Math.random() * COLORS.length)]; } while (labelColor.name === wordColor.name);
+    }
+    currentAnswer = labelColor.name;
+    const wordEl = $('#st-word');
+    wordEl.textContent = labelColor.name;
+    wordEl.style.color = wordColor.hex;
+    $('#st-progress').textContent = qIndex + ' / ' + TOTAL_Q;
+    $('#st-progressfill').style.width = (qIndex / TOTAL_Q * 100) + '%';
+    qStartTime = performance.now();
+  }
+
+  function buildChoiceButtons() {
+    const wrap = $('#st-choices');
+    wrap.innerHTML = '';
+    const shuffled = [...COLORS].sort(() => Math.random() - 0.5);
+    shuffled.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'st-choice';
+      btn.textContent = c.name;
+      btn.style.color = c.hex;
+      btn.addEventListener('click', () => onAnswer(c.name));
+      wrap.appendChild(btn);
+    });
+  }
+
+  function onAnswer(answerName) {
+    if (!running) return;
+    const rt = performance.now() - qStartTime;
+    const isCorrect = answerName === currentAnswer;
+    if (isCorrect) { correctCount++; reactionTimes.push(rt); }
+    $('#st-score').textContent = '正答 ' + correctCount;
+    $('#st-flash').textContent = isCorrect ? '正解' : '不正解（正解：' + currentAnswer + '）';
+    $('#st-flash').style.color = isCorrect ? '#16a34a' : '#dc2626';
+    qIndex++;
+    setTimeout(() => { $('#st-flash').textContent = ''; nextQuestion(); }, 250);
+  }
+
+  function finishTest() {
+    running = false;
+    $('#st-word').textContent = '完了';
+    $('#st-word').style.color = '#1f2933';
+    $('#st-choices').innerHTML = '';
+    $('#st-progress').textContent = TOTAL_Q + ' / ' + TOTAL_Q;
+    $('#st-progressfill').style.width = '100%';
+    const avgRt = reactionTimes.length
+      ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
+      : 0;
+    $('#st-result').textContent = '正答 ' + correctCount + ' / ' + TOTAL_Q + '　平均反応時間 ' + avgRt + 'ms';
+    saveRecord('ストループ', correctCount, avgRt + 'ms');
+  }
+
+  $('#st-start').addEventListener('click', () => {
+    if (!getName()) { alert('氏名を入力してください'); return; }
+    qIndex = 0;
+    correctCount = 0;
+    reactionTimes = [];
+    running = true;
+    $('#st-score').textContent = '正答 0';
+    $('#st-result').textContent = '';
+    nextQuestion();
+  });
+
+  function loadHistory() {
+    const body = $('#history-body');
+    body.innerHTML = '<div class="st-empty">読み込み中…</div>';
+    try {
+      const records = readRecords()
+        .filter(r => r.type === 'ストループ')
+        .sort((a, b) => b.ts - a.ts);
+      if (records.length === 0) {
+        body.innerHTML = '<div class="st-empty">まだ記録がありません</div>';
+        return;
+      }
+      let html = '<table class="st-table"><thead><tr>' +
+        '<th>日付</th><th>氏名</th><th>正答数</th><th>平均反応時間</th></tr></thead><tbody>';
+      records.forEach(r => {
+        html += '<tr><td>' + r.date + '</td><td>' + escapeHtml(r.name) + '</td><td>' +
+          r.scoreValue + ' / ' + TOTAL_Q + '</td><td>' + escapeHtml(r.extra) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      body.innerHTML = html;
+    } catch (e) {
+      console.error(e);
+      body.innerHTML = '<div class="st-empty">記録の読み込みに失敗しました</div>';
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function exportCsv() {
+    const records = readRecords().filter(r => r.type === 'ストループ').sort((a, b) => b.ts - a.ts);
+    if (records.length === 0) { alert('出力できる記録がありません'); return; }
+    const header = ['日付', '氏名', '正答数', '平均反応時間'];
+    const rows = records.map(r => [r.date, r.name, r.scoreValue + ' / ' + TOTAL_Q, r.extra]);
+    const csv = [header, ...rows]
+      .map(row => row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(','))
+      .join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ストループ記録_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  $('#history-refresh').addEventListener('click', loadHistory);
+  $('#history-export').addEventListener('click', exportCsv);
+})();
+</script>
+
+</body>
+</html>

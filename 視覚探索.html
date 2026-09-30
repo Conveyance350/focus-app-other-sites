@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>視覚探索トレーニング</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; -webkit-text-size-adjust: 100%; }
+  .ct-app { font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; max-width: 720px; margin: 0 auto; padding: 24px 20px 40px; color: #1f2933; }
+  .ct-header { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid #1f4e79; padding-bottom: 12px; margin-bottom: 20px; }
+  .ct-header h1 { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: .02em; }
+  .ct-header .ct-sub { font-size: 12px; color: #64748b; }
+  .ct-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .ct-row label { font-size: 13px; color: #475569; white-space: nowrap; }
+  .ct-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 7px 10px; font-size: 16px; flex: 1; min-width: 140px; }
+  .ct-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+  .ct-tab { padding: 9px 16px; font-size: 13px; cursor: pointer; border: none; background: none; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .ct-tab.active { color: #1f4e79; border-bottom-color: #1f4e79; font-weight: 700; }
+  .ct-panel { display: none; } .ct-panel.active { display: block; }
+  .ct-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 18px; margin-bottom: 18px; background: #fafbfc; }
+  .ct-btn { background: #1f4e79; color: #fff; border: none; border-radius: 4px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; }
+  .ct-btn:hover { background: #163a5c; }
+  .ct-btn.secondary { background: #fff; color: #1f4e79; border: 1px solid #1f4e79; }
+  .ct-stat { font-size: 20px; font-weight: 700; color: #1f4e79; font-variant-numeric: tabular-nums; }
+  .ct-note { font-size: 12px; color: #64748b; margin-top: 8px; }
+  .ct-center { text-align: center; margin: 14px 0; }
+  .ct-grid { display: grid; gap: 4px; margin: 14px auto; max-width: 460px; }
+  .ct-target {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; user-select: none; cursor: pointer; border-radius: 4px; background: #fff;
+    border: 1px solid #eef2f6; line-height: 1;
+  }
+  .ct-target:hover { background: #f1f5f9; }
+  .ct-flash { min-height: 18px; font-size: 13px; margin-top: 8px; text-align: center; }
+  table.ct-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.ct-table th, table.ct-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #e2e8f0; }
+  table.ct-table th { color: #64748b; font-weight: 600; font-size: 12px; }
+  .ct-empty { color: #94a3b8; font-size: 13px; padding: 12px 0; }
+  @media (max-width: 480px) { .ct-app { padding: 16px 14px 32px; } .ct-header h1 { font-size: 16px; } .ct-target { font-size: 18px; } table.ct-table { font-size: 12px; } }
+</style>
+</head>
+<body>
+<div class="ct-app">
+  <div class="ct-header">
+    <h1>視覚探索トレーニング</h1>
+    <span class="ct-sub">構内物流課</span>
+  </div>
+
+  <div class="ct-row">
+    <label for="ct-name">氏名</label>
+    <input type="text" id="ct-name" class="ct-input" placeholder="氏名を入力してください" autocomplete="off">
+  </div>
+
+  <div class="ct-tabs">
+    <button class="ct-tab active" data-tab="test">テスト</button>
+    <button class="ct-tab" data-tab="history">記録一覧</button>
+  </div>
+
+  <div class="ct-panel active" id="panel-test">
+    <div class="ct-card">
+      <div class="ct-note">たくさんの記号の中に<b>1つだけ違う記号</b>があります。素早く見つけてタップ。全10問の合計タイムを計測します。</div>
+      <div class="ct-row" style="justify-content:space-between; margin-top:10px;">
+        <div class="ct-stat" id="vs-progress">0 / 10</div>
+        <div class="ct-stat" id="vs-timer">0.0秒</div>
+      </div>
+      <div class="ct-center" id="vs-target-wrap">
+        <div class="ct-note" id="vs-target-label"></div>
+      </div>
+      <div class="ct-grid" id="vs-grid"></div>
+      <div class="ct-flash" id="vs-flash"></div>
+      <div class="ct-center">
+        <button class="ct-btn secondary" id="vs-start">開始</button>
+      </div>
+      <div class="ct-note" id="vs-result"></div>
+    </div>
+  </div>
+
+  <div class="ct-panel" id="panel-history">
+    <div class="ct-card">
+      <div class="ct-row" style="justify-content:space-between;">
+        <div style="font-size:13px; color:#475569;">記録一覧</div>
+        <div style="display:flex; gap:8px;">
+          <button class="ct-btn secondary" id="history-export">CSV出力</button>
+          <button class="ct-btn secondary" id="history-refresh">更新</button>
+        </div>
+      </div>
+      <div id="history-body"><div class="ct-empty">読み込み中…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const STORE_KEY = 'vsearch_records_v1';
+  const TOTAL = 10;
+
+  // 似た記号ペア（探索対象／妨害刺激）
+  const PAIRS = [
+    ['O', 'Q'], ['C', 'G'], ['E', 'F'], ['P', 'R'], ['V', 'Y'],
+    ['I', 'T'], ['M', 'N'], ['b', 'd'], ['6', '8'], ['5', 'S']
+  ];
+
+  $$('.ct-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.ct-tab').forEach(t => t.classList.remove('active'));
+      $$('.ct-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $('#panel-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'history') loadHistory();
+    });
+  });
+
+
+
+  const getName = () => ($('#ct-name').value.trim() || null);
+  function readRecords() { try { const raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return []; } }
+  function writeRecords(r) { try { localStorage.setItem(STORE_KEY, JSON.stringify(r)); return true; } catch (e) { alert('記録の保存に失敗しました'); return false; } }
+  function saveRecord(scoreValue) {
+    const name = getName();
+    if (!name) { alert('氏名を入力してください'); return false; }
+    const now = new Date();
+    const rec = { name, scoreValue, date: now.toISOString().slice(0, 10), ts: now.getTime() };
+    const records = readRecords(); records.push(rec);
+    return writeRecords(records);
+  }
+
+  let round = 0, startTime = null, timerHandle = null, running = false;
+
+  function startTest() {
+    if (!getName()) { alert('氏名を入力してください'); return; }
+    round = 0; running = true;
+    $('#vs-result').textContent = ''; $('#vs-flash').textContent = '';
+    $('#vs-start').disabled = true;
+    startTime = performance.now();
+    timerHandle = setInterval(() => {
+      $('#vs-timer').textContent = ((performance.now() - startTime) / 1000).toFixed(1) + '秒';
+    }, 100);
+    nextRound();
+  }
+
+  function nextRound() {
+    if (round >= TOTAL) { finish(); return; }
+    $('#vs-progress').textContent = (round + 1) + ' / ' + TOTAL;
+    const pair = PAIRS[Math.floor(Math.random() * PAIRS.length)];
+    const distractor = pair[0], target = pair[1];
+    // グリッドサイズを問題が進むほど増やす（難度上昇）
+    const size = 5 + Math.floor(round / 3); // 5,5,5,6,6,6,7...
+    const cols = size, rows = size, total = cols * rows;
+    const targetIdx = Math.floor(Math.random() * total);
+    const grid = $('#vs-grid');
+    grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+    grid.innerHTML = '';
+    $('#vs-target-label').innerHTML = '探す記号： <b style="font-size:20px;">' + target + '</b>';
+    for (let i = 0; i < total; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'ct-target';
+      cell.textContent = (i === targetIdx) ? target : distractor;
+      cell.addEventListener('click', () => onPick(i === targetIdx));
+      grid.appendChild(cell);
+    }
+  }
+
+  function onPick(correct) {
+    if (!running) return;
+    if (correct) {
+      $('#vs-flash').textContent = '正解';
+      $('#vs-flash').style.color = '#16a34a';
+      round++;
+      setTimeout(() => { $('#vs-flash').textContent = ''; nextRound(); }, 150);
+    } else {
+      // 誤タップは0.5秒ペナルティ（タイムに加算される形）
+      $('#vs-flash').textContent = 'ちがう記号です';
+      $('#vs-flash').style.color = '#dc2626';
+      startTime -= 500;
+    }
+  }
+
+  function finish() {
+    running = false; clearInterval(timerHandle);
+    const elapsed = (performance.now() - startTime) / 1000;
+    $('#vs-timer').textContent = elapsed.toFixed(1) + '秒';
+    $('#vs-grid').innerHTML = '';
+    $('#vs-target-label').textContent = '';
+    $('#vs-flash').textContent = '';
+    $('#vs-result').textContent = '完了：合計 ' + elapsed.toFixed(1) + '秒';
+    $('#vs-start').disabled = false;
+    saveRecord(Number(elapsed.toFixed(1)));
+  }
+
+  $('#vs-start').addEventListener('click', startTest);
+
+  function loadHistory() {
+    const body = $('#history-body');
+    const records = readRecords().slice().sort((a, b) => b.ts - a.ts);
+    if (records.length === 0) { body.innerHTML = '<div class="ct-empty">まだ記録がありません</div>'; return; }
+    let html = '<table class="ct-table"><thead><tr><th>日付</th><th>氏名</th><th>合計タイム</th></tr></thead><tbody>';
+    records.forEach(r => { html += '<tr><td>' + r.date + '</td><td>' + esc(r.name) + '</td><td>' + r.scoreValue + '秒</td></tr>'; });
+    html += '</tbody></table>'; body.innerHTML = html;
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function exportCsv() {
+    const records = readRecords().slice().sort((a, b) => b.ts - a.ts);
+    if (records.length === 0) { alert('出力できる記録がありません'); return; }
+    const rows = [['日付', '氏名', '合計タイム(秒)'], ...records.map(r => [r.date, r.name, r.scoreValue])];
+    const csv = rows.map(row => row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = '視覚探索記録_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+  $('#history-refresh').addEventListener('click', loadHistory);
+  $('#history-export').addEventListener('click', exportCsv);
+})();
+</script>
+</body>
+</html>

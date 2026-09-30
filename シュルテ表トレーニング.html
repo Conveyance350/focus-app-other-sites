@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>シュルテ表トレーニング</title>
+</head>
+<body>
+<style>
+
+  html, body { margin:0; padding:0; -webkit-text-size-adjust: 100%; }
+  .ct-input { font-size: 16px; }
+  .ct-btn { min-height: 44px; }
+  @media (max-width: 480px) {
+    .ct-app { padding: 16px 14px 32px; }
+    .ct-header h1 { font-size: 16px; }
+    .ct-stat { font-size: 20px; }
+    .ct-grid { max-width: 100%; }
+    .ct-cell { font-size: 16px; }
+    table.ct-table { font-size: 12px; }
+    table.ct-table th, table.ct-table td { padding: 6px 4px; }
+  }
+
+  * { box-sizing: border-box; }
+  .ct-app {
+    font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    max-width: 720px; margin: 0 auto; padding: 24px 20px 40px; color: #1f2933;
+  }
+  .ct-header { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid #1f4e79; padding-bottom: 12px; margin-bottom: 20px; }
+  .ct-header h1 { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: .02em; }
+  .ct-header .ct-sub { font-size: 12px; color: #64748b; }
+  .ct-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .ct-row label { font-size: 13px; color: #475569; white-space: nowrap; }
+  .ct-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 7px 10px; font-size: 14px; flex: 1; min-width: 140px; }
+  .ct-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+  .ct-tab { padding: 9px 16px; font-size: 13px; cursor: pointer; border: none; background: none; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .ct-tab.active { color: #1f4e79; border-bottom-color: #1f4e79; font-weight: 700; }
+  .ct-panel { display: none; }
+  .ct-panel.active { display: block; }
+  .ct-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 18px; margin-bottom: 18px; background: #fafbfc; }
+  .ct-btn { background: #1f4e79; color: #fff; border: none; border-radius: 4px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .ct-btn:hover { background: #163a5c; }
+  .ct-btn.secondary { background: #fff; color: #1f4e79; border: 1px solid #1f4e79; }
+  .ct-stat { font-size: 28px; font-weight: 700; color: #1f4e79; font-variant-numeric: tabular-nums; }
+  .ct-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 400px; margin: 14px 0; }
+  .ct-cell { aspect-ratio: 1; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; cursor: pointer; user-select: none; color: #1f2933; }
+  .ct-cell.done { background: #1f4e79; color: #fff; border-color: #1f4e79; }
+  table.ct-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.ct-table th, table.ct-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #e2e8f0; }
+  table.ct-table th { color: #64748b; font-weight: 600; font-size: 12px; }
+  .ct-empty { color: #94a3b8; font-size: 13px; padding: 12px 0; }
+  .ct-note { font-size: 12px; color: #64748b; margin-top: 8px; }
+</style>
+
+<div class="ct-app">
+  <div class="ct-header">
+    <h1>シュルテ表トレーニング</h1>
+    <span class="ct-sub">構内物流課</span>
+  </div>
+
+  <div class="ct-row">
+    <label for="ct-name">氏名</label>
+    <input type="text" id="ct-name" class="ct-input" placeholder="氏名を入力してください" autocomplete="off">
+  </div>
+
+  <div class="ct-tabs">
+    <button class="ct-tab active" data-tab="test">テスト</button>
+    <button class="ct-tab" data-tab="history">記録一覧</button>
+  </div>
+
+  <div class="ct-panel active" id="panel-test">
+    <div class="ct-card">
+      <div class="ct-row" style="justify-content:space-between; margin-bottom:6px;">
+        <div>1〜25を順番にタップ</div>
+        <div class="ct-stat" id="schulte-timer">0.0秒</div>
+      </div>
+      <div class="ct-grid" id="schulte-grid"></div>
+      <div class="ct-row">
+        <button class="ct-btn" id="schulte-start">開始</button>
+        <button class="ct-btn secondary" id="schulte-reset">やり直す</button>
+      </div>
+      <div class="ct-note" id="schulte-result"></div>
+    </div>
+  </div>
+
+  <div class="ct-panel" id="panel-history">
+    <div class="ct-card">
+      <div class="ct-row" style="justify-content:space-between;">
+        <div style="font-size:13px; color:#475569;">記録一覧</div>
+        <div style="display:flex; gap:8px;">
+          <button class="ct-btn secondary" id="history-export">CSV出力</button>
+          <button class="ct-btn secondary" id="history-refresh">更新</button>
+        </div>
+      </div>
+      <div id="history-body"><div class="ct-empty">読み込み中…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+  const STORE_KEY = 'schulte_records_v1';
+
+  $$('.ct-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.ct-tab').forEach(t => t.classList.remove('active'));
+      $$('.ct-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $('#panel-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'history') loadHistory();
+    });
+  });
+
+
+
+  const getName = () => ($('#ct-name').value.trim() || null);
+
+  function readRecords() {
+    try { const raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : []; }
+    catch (e) { console.error(e); return []; }
+  }
+  function writeRecords(records) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(records)); return true; }
+    catch (e) { console.error(e); alert('記録の保存に失敗しました'); return false; }
+  }
+  function saveRecord(scoreValue) {
+    const name = getName();
+    if (!name) { alert('氏名を入力してください'); return false; }
+    const now = new Date();
+    const records = readRecords();
+    records.push({ name, scoreValue, date: now.toISOString().slice(0, 10), ts: now.getTime() });
+    return writeRecords(records);
+  }
+
+  let schulteNext = 1, schulteStartTime = null, schulteTimerHandle = null, schulteRunning = false;
+
+  function buildSchulte() {
+    const nums = Array.from({ length: 25 }, (_, i) => i + 1);
+    for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [nums[i], nums[j]] = [nums[j], nums[i]]; }
+    const grid = $('#schulte-grid'); grid.innerHTML = '';
+    nums.forEach(n => {
+      const cell = document.createElement('div');
+      cell.className = 'ct-cell'; cell.textContent = n; cell.dataset.num = n;
+      cell.addEventListener('click', () => onSchulteCellClick(cell));
+      grid.appendChild(cell);
+    });
+    schulteNext = 1; schulteRunning = false;
+    $('#schulte-timer').textContent = '0.0秒'; $('#schulte-result').textContent = '';
+  }
+  function onSchulteCellClick(cell) {
+    if (!schulteRunning) return;
+    const n = Number(cell.dataset.num);
+    if (n !== schulteNext) return;
+    cell.classList.add('done'); schulteNext++;
+    if (schulteNext > 25) finishSchulte();
+  }
+  function finishSchulte() {
+    schulteRunning = false; clearInterval(schulteTimerHandle);
+    const elapsed = (performance.now() - schulteStartTime) / 1000;
+    $('#schulte-timer').textContent = elapsed.toFixed(1) + '秒';
+    $('#schulte-result').textContent = '完了：' + elapsed.toFixed(1) + '秒';
+    saveRecord(Number(elapsed.toFixed(1)));
+  }
+  $('#schulte-start').addEventListener('click', () => {
+    if (!getName()) { alert('氏名を入力してください'); return; }
+    buildSchulte(); schulteRunning = true; schulteStartTime = performance.now();
+    schulteTimerHandle = setInterval(() => {
+      const elapsed = (performance.now() - schulteStartTime) / 1000;
+      $('#schulte-timer').textContent = elapsed.toFixed(1) + '秒';
+    }, 100);
+  });
+  $('#schulte-reset').addEventListener('click', () => { clearInterval(schulteTimerHandle); buildSchulte(); });
+  buildSchulte();
+
+  function loadHistory() {
+    const body = $('#history-body');
+    const records = readRecords().slice().sort((a, b) => b.ts - a.ts);
+    if (records.length === 0) { body.innerHTML = '<div class="ct-empty">まだ記録がありません</div>'; return; }
+    let html = '<table class="ct-table"><thead><tr><th>日付</th><th>氏名</th><th>所要時間</th></tr></thead><tbody>';
+    records.forEach(r => { html += '<tr><td>' + r.date + '</td><td>' + escapeHtml(r.name) + '</td><td>' + r.scoreValue + '秒</td></tr>'; });
+    html += '</tbody></table>';
+    body.innerHTML = html;
+  }
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function exportCsv() {
+    const records = readRecords().slice().sort((a, b) => b.ts - a.ts);
+    if (records.length === 0) { alert('出力できる記録がありません'); return; }
+    const rows = [['日付', '氏名', '所要時間(秒)'], ...records.map(r => [r.date, r.name, r.scoreValue])];
+    const csv = rows.map(row => row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'シュルテ表記録_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+  $('#history-refresh').addEventListener('click', loadHistory);
+  $('#history-export').addEventListener('click', exportCsv);
+})();
+</script>
+
+</body>
+</html>

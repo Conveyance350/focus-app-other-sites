@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Nバック課題トレーニング</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; -webkit-text-size-adjust: 100%; }
+  .ct-app { font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; max-width: 720px; margin: 0 auto; padding: 24px 20px 40px; color: #1f2933; }
+  .ct-header { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid #1f4e79; padding-bottom: 12px; margin-bottom: 20px; }
+  .ct-header h1 { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: .02em; }
+  .ct-header .ct-sub { font-size: 12px; color: #64748b; }
+  .ct-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .ct-row label { font-size: 13px; color: #475569; white-space: nowrap; }
+  .ct-input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 7px 10px; font-size: 16px; flex: 1; min-width: 140px; }
+  .ct-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+  .ct-tab { padding: 9px 16px; font-size: 13px; cursor: pointer; border: none; background: none; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .ct-tab.active { color: #1f4e79; border-bottom-color: #1f4e79; font-weight: 700; }
+  .ct-panel { display: none; } .ct-panel.active { display: block; }
+  .ct-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 18px; margin-bottom: 18px; background: #fafbfc; }
+  .ct-btn { background: #1f4e79; color: #fff; border: none; border-radius: 4px; padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; }
+  .ct-btn:hover { background: #163a5c; }
+  .ct-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+  .ct-btn.secondary { background: #fff; color: #1f4e79; border: 1px solid #1f4e79; }
+  .ct-btn.big { font-size: 18px; padding: 16px 40px; }
+  .ct-stat { font-size: 20px; font-weight: 700; color: #1f4e79; font-variant-numeric: tabular-nums; }
+  .ct-display { text-align: center; font-size: 72px; font-weight: 700; padding: 30px 0; user-select: none; min-height: 140px; display: flex; align-items: center; justify-content: center; color: #1f2933; }
+  .ct-note { font-size: 12px; color: #64748b; margin-top: 8px; }
+  .ct-center { text-align: center; margin: 14px 0; }
+  table.ct-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.ct-table th, table.ct-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #e2e8f0; }
+  table.ct-table th { color: #64748b; font-weight: 600; font-size: 12px; }
+  .ct-empty { color: #94a3b8; font-size: 13px; padding: 12px 0; }
+  @media (max-width: 480px) { .ct-app { padding: 16px 14px 32px; } .ct-header h1 { font-size: 16px; } .ct-display { font-size: 56px; } table.ct-table { font-size: 12px; } }
+</style>
+</head>
+<body>
+<div class="ct-app">
+  <div class="ct-header">
+    <h1>Nバック課題トレーニング</h1>
+    <span class="ct-sub">構内物流課</span>
+  </div>
+
+  <div class="ct-row">
+    <label for="ct-name">氏名</label>
+    <input type="text" id="ct-name" class="ct-input" placeholder="氏名を入力してください" autocomplete="off">
+  </div>
+
+  <div class="ct-tabs">
+    <button class="ct-tab active" data-tab="test">テスト</button>
+    <button class="ct-tab" data-tab="history">記録一覧</button>
+  </div>
+
+  <div class="ct-panel active" id="panel-test">
+    <div class="ct-card">
+      <div class="ct-note">数字が1つずつ表示されます。<b>2つ前と同じ数字</b>が出たら「同じ」を押してください。全20問。</div>
+      <div class="ct-row" style="justify-content:space-between; margin-top:10px;">
+        <div class="ct-stat" id="nb-progress">0 / 20</div>
+        <div class="ct-stat" id="nb-score">正答 0</div>
+      </div>
+      <div class="ct-display" id="nb-display">開始</div>
+      <div class="ct-center">
+        <button class="ct-btn big" id="nb-match" disabled>2つ前と同じ</button>
+      </div>
+      <div class="ct-center">
+        <button class="ct-btn secondary" id="nb-start">開始</button>
+      </div>
+      <div class="ct-note" id="nb-result"></div>
+    </div>
+  </div>
+
+  <div class="ct-panel" id="panel-history">
+    <div class="ct-card">
+      <div class="ct-row" style="justify-content:space-between;">
+        <div style="font-size:13px; color:#475569;">記録一覧</div>
+        <div style="display:flex; gap:8px;">
+          <button class="ct-btn secondary" id="history-export">CSV出力</button>
+          <button class="ct-btn secondary" id="history-refresh">更新</button>
+        </div>
+      </div>
+      <div id="history-body"><div class="ct-empty">読み込み中…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const STORE_KEY = 'nback_records_v1';
+  const N = 2, TOTAL = 20;
+
+  $$('.ct-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.ct-tab').forEach(t => t.classList.remove('active'));
+      $$('.ct-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $('#panel-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'history') loadHistory();
+    });
+  });
+
+
+
+  const getName = () => ($('#ct-name').value.trim() || null);
+  function readRecords() { try { const raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return []; } }
+  function writeRecords(r) { try { localStorage.setItem(STORE_KEY, JSON.stringify(r)); return true; } catch (e) { alert('記録の保存に失敗しました'); return false; } }
+  function saveRecord(scoreValue) {
+    const name = getName();
+    if (!name) { alert('氏名を入力してください'); return false; }
+    const now = new Date();
+    const rec = { name, scoreValue, date: now.toISOString().slice(0, 10), ts: now.getTime() };
+    const records = readRecords(); records.push(rec);
+    return writeRecords(records);
+  }
+
+  let seq = [], idx = 0, correct = 0, running = false, timer = null, awaitingAnswer = false, answered = false;
+
+  function genSequence() {
+    // 20個の数字(1-9)。2つ前と一致する箇所を約6回仕込む
+    const arr = [];
+    for (let i = 0; i < TOTAL; i++) {
+      if (i >= N && Math.random() < 0.3) {
+        arr.push(arr[i - N]); // match
+      } else {
+        let v;
+        do { v = Math.floor(Math.random() * 9) + 1; } while (i >= N && v === arr[i - N] && Math.random() < 0.7);
+        arr.push(v);
+      }
+    }
+    return arr;
+  }
+
+  function startTest() {
+    if (!getName()) { alert('氏名を入力してください'); return; }
+    seq = genSequence(); idx = 0; correct = 0; running = true;
+    $('#nb-score').textContent = '正答 0';
+    $('#nb-result').textContent = '';
+    $('#nb-start').disabled = true;
+    $('#nb-match').disabled = false;
+    showNext();
+  }
+
+  function showNext() {
+    if (idx >= TOTAL) { finish(); return; }
+    answered = false;
+    awaitingAnswer = idx >= N;
+    $('#nb-display').textContent = seq[idx];
+    $('#nb-progress').textContent = (idx + 1) + ' / ' + TOTAL;
+    timer = setTimeout(() => {
+      // 時間切れ＝「同じ」を押さなかった判定
+      evaluate(false);
+      $('#nb-display').textContent = '';
+      setTimeout(() => { idx++; showNext(); }, 300);
+    }, 2000);
+  }
+
+  function evaluate(pressed) {
+    if (!awaitingAnswer) {
+      // N問目未満は判定対象外（押しても無効）
+      return;
+    }
+    if (answered) return;
+    answered = true;
+    const isMatch = seq[idx] === seq[idx - N];
+    if (pressed === isMatch) correct++;
+    $('#nb-score').textContent = '正答 ' + correct;
+  }
+
+  $('#nb-match').addEventListener('click', () => {
+    if (!running) return;
+    if (awaitingAnswer && !answered) {
+      clearTimeout(timer);
+      evaluate(true);
+      $('#nb-display').textContent = '';
+      setTimeout(() => { idx++; showNext(); }, 300);
+    }
+  });
+
+  function finish() {
+    running = false; clearTimeout(timer);
+    $('#nb-display').textContent = '完了';
+    $('#nb-match').disabled = true;
+    $('#nb-start').disabled = false;
+    // 判定対象は N問目以降の (TOTAL - N) 問
+    const judged = TOTAL - N;
+    $('#nb-result').textContent = '正答 ' + correct + ' / ' + judged + '（判定対象' + judged + '問中）';
+    saveRecord(correct);
+  }
+
+  $('#nb-start').addEventListener('click', startTest);
+
+  function loadHistory() {
+    const body = $('#history-body');
+    const records = readRecords().slice().sort((a, b) => b.ts - a.ts);
+    if (records.length === 0) { body.innerHTML = '<div class="ct-empty">まだ記録がありません</div>'; return; }
+    let html = '<table class="ct-table"><thead><tr><th>日付</th><th>氏名</th><th>正答数</th></tr></thead><tbody>';
+    records.forEach(r => { html += '<tr><td>' + r.date + '</td><td>' + esc(r.name) + '</td><td>' + r.scoreValue + ' / ' + (TOTAL - N) + '</td></tr>'; });
+    html += '</tbody></table>'; body.innerHTML = html;
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function exportCsv() {
+    const records = readRecords().slice().sort((a, b) => b.ts - a.ts);
+    if (records.length === 0) { alert('出力できる記録がありません'); return; }
+    const rows = [['日付', '氏名', '正答数'], ...records.map(r => [r.date, r.name, r.scoreValue])];
+    const csv = rows.map(row => row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'Nバック記録_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+  $('#history-refresh').addEventListener('click', loadHistory);
+  $('#history-export').addEventListener('click', exportCsv);
+})();
+</script>
+</body>
+</html>

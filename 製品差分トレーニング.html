@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>製品差分トレーニング</title>
+<style>
+  :root{
+    --ink:#12171c; --paper:#eef0ee; --card:#ffffff; --line:#c9cec9;
+    --accent:#0b6e4f; --accent-ink:#063a2a; --alert:#c1121f;
+    --amber:#e08a00; --muted:#6b7580; --ok-bg:#e4f1ea; --ng-bg:#fbe4e6;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,system-ui,sans-serif;
+    min-height:100dvh;display:flex;justify-content:center;}
+  .app{width:100%;max-width:560px;min-height:100dvh;display:flex;flex-direction:column;}
+
+  header{padding:14px 18px 10px;border-bottom:2px solid var(--ink);
+    display:flex;align-items:flex-end;justify-content:space-between;}
+  .title{font-size:19px;font-weight:800;letter-spacing:.02em;}
+  .title small{display:block;font-size:11px;font-weight:600;color:var(--muted);
+    letter-spacing:.12em;margin-bottom:2px;}
+  .score{text-align:right;font-variant-numeric:tabular-nums;line-height:1.1;}
+  .score .big{font-size:22px;font-weight:800;}
+  .score .lbl{font-size:10px;color:var(--muted);letter-spacing:.1em;}
+
+  .prog{height:6px;background:var(--line);}
+  .prog > i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s;}
+
+  main{flex:1;padding:14px 14px 6px;display:flex;flex-direction:column;gap:12px;}
+  .instruct{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .instruct .q{background:var(--ink);color:#fff;border-radius:50%;width:22px;height:22px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none;}
+  .instruct .timer{margin-left:auto;font-variant-numeric:tabular-nums;font-size:13px;
+    color:var(--muted);font-weight:600;}
+
+  .cards{display:flex;flex-direction:column;gap:12px;}
+  .card{background:var(--card);border:1.5px solid var(--line);border-radius:10px;overflow:hidden;}
+  .card h3{margin:0;padding:7px 12px;font-size:11px;letter-spacing:.14em;color:#fff;
+    background:var(--accent-ink);font-weight:700;display:flex;justify-content:space-between;}
+  .card.b h3{background:#334;}
+  .grid{
+    padding:12px;display:grid;gap:8px;
+    grid-template-columns:repeat(var(--cols,4),1fr);
+  }
+  .cell{
+    aspect-ratio:1/1;border:1.5px solid #e3e6e3;border-radius:8px;background:#fafbfa;
+    display:flex;align-items:center;justify-content:center;position:relative;
+    transition:background .12s, box-shadow .12s;
+  }
+  .card.b .cell{cursor:pointer;}
+  .card.b .cell:active{background:#f0f2f0;}
+  .cell svg{width:78%;height:78%;}
+  .cell .mark{position:absolute;top:2px;right:4px;font-size:16px;font-weight:900;}
+  .cell.sel{background:#fff6da;box-shadow:inset 0 0 0 2px var(--amber);}
+  .cell.sel .mark::after{content:"●";color:var(--amber);}
+  .cell.correct{background:var(--ok-bg);box-shadow:inset 0 0 0 2px var(--accent);}
+  .cell.correct .mark::after{content:"✓";color:var(--accent);}
+  .cell.miss{background:var(--ng-bg);box-shadow:inset 0 0 0 2px var(--alert);}
+  .cell.miss .mark::after{content:"！";color:var(--alert);}
+
+  footer{padding:10px 14px 20px;display:flex;flex-direction:column;gap:10px;}
+  .btn{border:none;border-radius:10px;font-size:17px;font-weight:800;padding:16px;
+    letter-spacing:.05em;cursor:pointer;transition:transform .08s,filter .15s;}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-same{background:#fff;color:var(--accent-ink);border:1.5px solid var(--accent);}
+  .hint{font-size:12px;color:var(--muted);text-align:center;}
+
+  .verdict{padding:12px;border-radius:10px;text-align:center;font-weight:800;
+    font-size:15px;display:none;}
+  .verdict.show{display:block;}
+  .verdict.good{background:var(--ok-bg);color:var(--accent-ink);}
+  .verdict.bad{background:var(--ng-bg);color:var(--alert);}
+  .verdict small{display:block;font-weight:600;font-size:12px;margin-top:3px;color:var(--ink);}
+
+  .start,.result{flex:1;display:flex;flex-direction:column;justify-content:center;
+    align-items:center;text-align:center;padding:30px 24px;gap:16px;}
+  .result{display:none;}
+  .result.show{display:flex;}
+  .start.hide{display:none;}
+  .start h2{font-size:24px;margin:0;font-weight:800;line-height:1.4;}
+  .start p{font-size:14px;color:var(--muted);line-height:1.7;margin:0;}
+  .start .steps{text-align:left;background:#fff;border:1.5px solid var(--line);
+    border-radius:10px;padding:14px 18px;font-size:13px;line-height:1.9;}
+  .start .steps b{color:var(--accent-ink);}
+  .row-opt{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:14px;}
+  select{font-size:14px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);}
+  .name-other{font-size:16px;padding:10px 12px;border-radius:8px;
+    border:1.5px solid var(--line);width:100%;max-width:300px;text-align:center;font-weight:700;}
+  #userName{font-size:16px;padding:10px 12px;width:100%;max-width:300px;
+    text-align:center;font-weight:700;background:#fff;}
+  select:focus,#userName:focus{outline:none;border-color:var(--accent);}
+
+  /* 集計表 */
+  .log{width:100%;margin-top:6px;}
+  .log h4{font-size:13px;letter-spacing:.1em;color:var(--muted);
+    margin:0 0 6px;text-align:left;font-weight:700;}
+  .tblwrap{overflow-x:auto;border:1.5px solid var(--line);border-radius:8px;background:#fff;}
+  table{border-collapse:collapse;width:100%;font-size:12px;
+    font-variant-numeric:tabular-nums;white-space:nowrap;}
+  th,td{padding:7px 9px;border-bottom:1px solid #e8eae8;text-align:right;}
+  th{background:var(--accent-ink);color:#fff;font-weight:700;
+    letter-spacing:.05em;position:sticky;top:0;}
+  th:first-child,td:first-child{text-align:left;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:#f7f9f7;}
+  td.low{color:var(--alert);font-weight:800;}
+  td.high{color:var(--accent);font-weight:800;}
+  .btn-sub{background:#fff;color:var(--ink);border:1.5px solid var(--ink);
+    font-size:14px;padding:12px;}
+  .btn-danger{background:#fff;color:var(--alert);border:1.5px solid var(--alert);
+    font-size:13px;padding:10px;}
+  .btnrow{display:flex;gap:8px;width:100%;max-width:340px;}
+  .btnrow .btn{flex:1;}
+  .empty{font-size:12px;color:var(--muted);padding:14px;text-align:center;}
+  .result .rate{font-size:56px;font-weight:800;color:var(--accent);line-height:1;}
+  .result .rlbl{font-size:13px;color:var(--muted);letter-spacing:.1em;}
+  .result .detail{font-size:14px;line-height:1.7;}
+  .result .msg{font-size:15px;font-weight:700;padding:12px 16px;border-radius:8px;
+    background:#fff;border:1.5px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="start" id="startScreen">
+    <h2>製品差分<br>トレーニング</h2>
+    <p>上（前回）と下（今回）の製品を見比べ、<b style="color:var(--alert)">違う製品</b>を見つけます。<br>色・向き・形の違いを見抜く訓練です。</p>
+    <div class="steps">
+      <b>進め方</b><br>
+      ① 上下2つの製品パレットを見比べる<br>
+      ② 下段で違う製品を<b>タップ</b><br>
+      ③ 違いが無ければ「相違なし」<br>
+      ④ 「判定する」で答え合わせ
+    </div>
+    <div class="row-opt">
+      <input type="text" id="userName" placeholder="氏名を入力してください" autocomplete="off">
+    </div>
+    <div class="row-opt">
+      問題数
+      <select id="qCount">
+        <option value="5">5問</option>
+        <option value="10" selected>10問</option>
+        <option value="15">15問</option>
+      </select>
+      難易度
+      <select id="level">
+        <option value="easy">やさしい（大きな違い）</option>
+        <option value="normal" selected>ふつう</option>
+        <option value="hard">むずかしい（微差）</option>
+      </select>
+      製品数
+      <select id="cellCount">
+        <option value="4">4個（導入期）</option>
+        <option value="6" selected>6個（標準）</option>
+        <option value="8">8個（熟練）</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="startGame()">はじめる</button>
+  </div>
+
+  <div id="playScreen" style="display:none;flex-direction:column;flex:1;">
+    <header>
+      <div class="title"><small>PRODUCT CHECK DRILL</small>製品差分</div>
+      <div class="score"><div class="big"><span id="scoreNum">0</span>/<span id="scoreTot">10</span></div><div class="lbl">SCORE</div></div>
+    </header>
+    <div class="prog"><i id="progBar"></i></div>
+
+    <main>
+      <div class="instruct">
+        <span class="q">?</span>
+        <span>違う製品をタップ。無ければ「相違なし」</span>
+        <span class="timer" id="timer">0.0s</span>
+      </div>
+
+      <div class="cards">
+        <div class="card a">
+          <h3><span>前回（見本）</span><span>REF</span></h3>
+          <div class="grid" id="gridA"></div>
+        </div>
+        <div class="card b">
+          <h3><span>今回（確認対象）</span><span>NOW</span></h3>
+          <div class="grid" id="gridB"></div>
+        </div>
+      </div>
+
+      <div class="verdict" id="verdict"></div>
+    </main>
+
+    <footer>
+      <button class="btn btn-same" id="sameBtn" onclick="answerSame()">相違なし</button>
+      <button class="btn btn-primary" id="judgeBtn" onclick="judge()">判定する</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="nextQ()" style="display:none;">次へ ▶</button>
+      <div class="hint" id="hint">気づいた違いをすべて選んでください</div>
+    </footer>
+  </div>
+
+  <div class="result" id="resultScreen">
+    <div class="rlbl">正答率</div>
+    <div class="rate"><span id="finalRate">0</span>%</div>
+    <div class="detail" id="finalDetail"></div>
+    <div class="msg" id="finalMsg"></div>
+
+    <div class="log">
+      <h4>訓練記録（集計表）</h4>
+      <div class="tblwrap" id="tblwrap"></div>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn btn-primary" onclick="location.reload()">もう一度</button>
+      <button class="btn btn-sub" onclick="exportCSV()">CSV出力</button>
+    </div>
+    <button class="btn btn-danger" style="width:100%;max-width:340px" onclick="clearLog()">記録を全消去</button>
+  </div>
+
+</div>
+
+<script>
+/* ===== 氏名入力 ===== */
+
+const getName=()=>(document.getElementById('userName').value.trim()||null);
+
+/* ===== 製品図の描画 ===== */
+const COLORS = {
+  red:"#c1121f", blue:"#1e5aa8", green:"#0b8a4f",
+  amber:"#e0930b", purple:"#7a3fb0", gray:"#5a636c"
+};
+const COLOR_KEYS = Object.keys(COLORS);
+const SHAPES = ["box","drum","bag","can"]; // 箱・ドラム・袋・缶
+const ROTS = [0,90,180,270];
+
+function drawProduct(p){
+  const c = COLORS[p.color];
+  const dark = shade(c,-25);
+  let inner="";
+  if(p.shape==="box"){
+    inner=`
+      <rect x="18" y="24" width="64" height="56" rx="4" fill="${c}" stroke="${dark}" stroke-width="3"/>
+      <line x1="18" y1="42" x2="82" y2="42" stroke="${dark}" stroke-width="3"/>
+      <rect x="40" y="30" width="20" height="9" fill="#fff" opacity=".85"/>`;
+  }else if(p.shape==="drum"){
+    inner=`
+      <ellipse cx="50" cy="26" rx="26" ry="9" fill="${shade(c,15)}" stroke="${dark}" stroke-width="3"/>
+      <path d="M24 26 V74 A26 9 0 0 0 76 74 V26" fill="${c}" stroke="${dark}" stroke-width="3"/>
+      <line x1="24" y1="45" x2="76" y2="45" stroke="${dark}" stroke-width="2.5"/>
+      <line x1="24" y1="58" x2="76" y2="58" stroke="${dark}" stroke-width="2.5"/>`;
+  }else if(p.shape==="bag"){
+    inner=`
+      <path d="M32 30 Q50 18 68 30 L74 78 Q50 86 26 78 Z" fill="${c}" stroke="${dark}" stroke-width="3"/>
+      <path d="M40 30 Q50 24 60 30" fill="none" stroke="${dark}" stroke-width="3"/>
+      <rect x="40" y="46" width="20" height="14" fill="#fff" opacity=".85"/>`;
+  }else{ // can
+    inner=`
+      <ellipse cx="50" cy="24" rx="20" ry="7" fill="${shade(c,15)}" stroke="${dark}" stroke-width="3"/>
+      <path d="M30 24 V76 A20 7 0 0 0 70 76 V24" fill="${c}" stroke="${dark}" stroke-width="3"/>
+      <rect x="34" y="40" width="32" height="20" fill="#fff" opacity=".85" stroke="${dark}" stroke-width="1.5"/>`;
+  }
+  return `<svg viewBox="0 0 100 100" style="transform:rotate(${p.rot}deg)">${inner}</svg>`;
+}
+function shade(hex,pct){
+  let n=parseInt(hex.slice(1),16);
+  let r=(n>>16)+pct, g=((n>>8)&255)+pct, b=(n&255)+pct;
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+  return "#"+((r<<16)|(g<<8)|b).toString(16).padStart(6,"0");
+}
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+
+/* ===== 問題生成 ===== */
+let CELLS=6; // 可変：4/6/8
+let level="normal";
+
+function makeQuestion(){
+  const base=Array.from({length:CELLS},()=>({
+    color:pick(COLOR_KEYS), shape:pick(SHAPES), rot:pick(ROTS)
+  }));
+  const now=base.map(p=>({...p}));
+  const r=Math.random();
+  let diffCount = r<0.25?0 : (Math.random()<0.6?1:2);
+  const idxs=[...Array(CELLS).keys()].sort(()=>Math.random()-0.5).slice(0,diffCount);
+  idxs.forEach(i=>{ now[i]=mutate(base[i]); });
+  return {a:base,b:now,diffs:new Set(idxs)};
+}
+function mutate(p){
+  const q={...p};
+  // 変える属性：難易度で範囲を変える
+  let attrs;
+  if(level==="easy")   attrs=["color","shape"];       // 目立つ違い
+  else if(level==="hard") attrs=["rot"];                // 向きだけ＝微差
+  else attrs=["color","shape","rot"];
+  const a=pick(attrs);
+  if(a==="color"){ let c=pick(COLOR_KEYS); while(c===p.color)c=pick(COLOR_KEYS); q.color=c; }
+  else if(a==="shape"){ let s=pick(SHAPES); while(s===p.shape)s=pick(SHAPES); q.shape=s; }
+  else { let ro=pick(ROTS); while(ro===p.rot)ro=pick(ROTS); q.rot=ro; }
+  return q;
+}
+
+/* ===== 進行 ===== */
+let questions=[],qi=0,correct=0,total=10;
+let selected=new Set(),answered=false,t0=0,timerId=null,times=[];
+let userName="";
+let logRows=[];   // 訓練記録（1回1行）
+
+function startGame(){
+  const nm=getName();
+  if(!nm){ alert('氏名を入力してください'); document.getElementById('userName').focus(); return; }
+  userName=nm;
+  total=parseInt(qCount.value,10);
+  level=document.getElementById('level').value;
+  CELLS=parseInt(document.getElementById('cellCount').value,10);
+  questions=Array.from({length:total},makeQuestion);
+  qi=0;correct=0;times=[];
+  startScreen.classList.add('hide');startScreen.style.display='none';
+  playScreen.style.display='flex';
+  scoreTot.textContent=total;
+  renderQ();
+}
+function renderQ(){
+  answered=false;selected.clear();
+  const q=questions[qi];
+  const cols = CELLS===4?2 : CELLS===6?3 : 4;
+  gridA.style.setProperty('--cols',cols);
+  gridB.style.setProperty('--cols',cols);
+  gridA.innerHTML='';gridB.innerHTML='';
+  q.a.forEach(p=>{
+    gridA.insertAdjacentHTML('beforeend',`<div class="cell">${drawProduct(p)}</div>`);
+  });
+  q.b.forEach((p,i)=>{
+    gridB.insertAdjacentHTML('beforeend',
+      `<div class="cell" data-i="${i}">${drawProduct(p)}<span class="mark"></span></div>`);
+  });
+  gridB.querySelectorAll('.cell').forEach(el=>el.onclick=()=>toggle(el));
+  verdict.className='verdict';
+  judgeBtn.style.display='block';sameBtn.style.display='block';nextBtn.style.display='none';
+  hint.textContent='気づいた違いをすべて選んでください';
+  progBar.style.width=(qi/total*100)+'%';
+  scoreNum.textContent=correct;
+  t0=performance.now();clearInterval(timerId);
+  timerId=setInterval(()=>{timer.textContent=((performance.now()-t0)/1000).toFixed(1)+'s';},100);
+}
+function toggle(el){
+  if(answered)return;
+  const i=el.dataset.i;
+  if(selected.has(i)){selected.delete(i);el.classList.remove('sel');}
+  else{selected.add(i);el.classList.add('sel');}
+}
+function answerSame(){
+  if(answered)return;
+  selected.clear();
+  gridB.querySelectorAll('.cell').forEach(el=>el.classList.remove('sel'));
+  judge();
+}
+function judge(){
+  if(answered)return;
+  answered=true;clearInterval(timerId);
+  const spent=(performance.now()-t0)/1000;times.push(spent);
+  const q=questions[qi];
+  const picked=new Set([...selected].map(Number));
+  let ok=picked.size===q.diffs.size && [...picked].every(x=>q.diffs.has(x));
+  gridB.querySelectorAll('.cell').forEach(el=>{
+    const i=Number(el.dataset.i);el.classList.remove('sel');
+    if(q.diffs.has(i))el.classList.add('correct');
+    if(picked.has(i)&&!q.diffs.has(i))el.classList.add('miss');
+  });
+  if(ok){
+    correct++;
+    verdict.className='verdict show good';
+    verdict.innerHTML=q.diffs.size===0
+      ?'正解 ◎ 相違なしを見抜きました<small>'+spent.toFixed(1)+'秒</small>'
+      :'正解 ◎ 違いをすべて発見<small>'+spent.toFixed(1)+'秒</small>';
+  }else{
+    verdict.className='verdict show bad';
+    const w=q.diffs.size===0?'本当は相違なしでした':'緑=正しい違い／赤=誤り';
+    verdict.innerHTML='不正解 ✕ '+w+'<small>思い込みに注意</small>';
+  }
+  scoreNum.textContent=correct;
+  judgeBtn.style.display='none';sameBtn.style.display='none';nextBtn.style.display='block';
+  nextBtn.textContent=qi<total-1?'次へ ▶':'結果を見る ▶';
+  hint.textContent='';
+}
+function nextQ(){qi++;if(qi>=total){showResult();return;}renderQ();}
+function showResult(){
+  playScreen.style.display='none';
+  const rate=Math.round(correct/total*100);
+  const avg=(times.reduce((a,b)=>a+b,0)/times.length).toFixed(1);
+  finalRate.textContent=rate;
+  finalDetail.innerHTML=`${total}問中 <b>${correct}問</b>正解　／　平均 <b>${avg}秒</b>`;
+  let msg;
+  if(rate===100)msg='完璧です。この集中を現場でも。';
+  else if(rate>=80)msg='良好。見落とした点を意識して継続を。';
+  else if(rate>=50)msg='要注意。見る順番を固定しましょう。';
+  else msg='思い込みが強く出ています。1件完結・発声確認を徹底。';
+  finalMsg.textContent=msg;
+
+  // ---- 記録を保存 ----
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const levelLabel={easy:'やさしい',normal:'ふつう',hard:'むずかしい'}[level];
+  logRows.push({
+    date:`${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`,
+    time:`${pad(now.getHours())}:${pad(now.getMinutes())}`,
+    name:userName,
+    level:levelLabel,
+    cells:CELLS,
+    total:total,
+    correct:correct,
+    rate:rate,
+    avg:avg
+  });
+  saveLog();
+  renderTable();
+  resultScreen.classList.add('show');
+}
+
+/* ===== 記録の保存・表示・出力 ===== */
+function saveLog(){
+  try{ sessionStorage.setItem('drillLog',JSON.stringify(logRows)); }catch(e){}
+}
+function loadLog(){
+  try{
+    const s=sessionStorage.getItem('drillLog');
+    if(s) logRows=JSON.parse(s);
+  }catch(e){ logRows=[]; }
+}
+function renderTable(){
+  const w=document.getElementById('tblwrap');
+  if(!logRows.length){ w.innerHTML='<div class="empty">記録はまだありません</div>'; return; }
+  let h='<table><thead><tr>'
+    +'<th>氏名</th><th>日付</th><th>時刻</th><th>難易度</th><th>製品数</th>'
+    +'<th>問題数</th><th>正解</th><th>正答率</th><th>平均秒</th>'
+    +'</tr></thead><tbody>';
+  // 新しい順
+  [...logRows].reverse().forEach(r=>{
+    const cls = r.rate>=80?'high' : r.rate<50?'low' : '';
+    h+=`<tr><td>${esc(r.name)}</td><td>${r.date}</td><td>${r.time}</td>`
+      +`<td>${r.level}</td><td>${r.cells}</td><td>${r.total}</td>`
+      +`<td>${r.correct}</td><td class="${cls}">${r.rate}%</td><td>${r.avg}</td></tr>`;
+  });
+  h+='</tbody></table>';
+  w.innerHTML=h;
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function exportCSV(){
+  if(!logRows.length){ alert('出力する記録がありません'); return; }
+  const head=['氏名','日付','時刻','難易度','製品数','問題数','正解数','正答率(%)','平均秒'];
+  const lines=[head.join(',')];
+  logRows.forEach(r=>{
+    lines.push([q(r.name),r.date,r.time,r.level,r.cells,r.total,r.correct,r.rate,r.avg].join(','));
+  });
+  // Excelの文字化け防止にBOM付与
+  const bom='\uFEFF';
+  const blob=new Blob([bom+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const d=new Date(), pad=n=>String(n).padStart(2,'0');
+  const fname=`製品差分訓練_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.csv`;
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=fname; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+function q(s){
+  s=String(s);
+  return /[",\r\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+function clearLog(){
+  if(!confirm('保存されている訓練記録をすべて消去します。よろしいですか？')) return;
+  logRows=[]; saveLog(); renderTable();
+}
+
+loadLog();
+</script>
+</body>
+</html>
