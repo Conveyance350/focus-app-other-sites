@@ -44,7 +44,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sheet);outline-
 .brand p{margin:2px 0 0;color:var(--sub);font-size:15px}
 .field{display:block;margin-bottom:14px}
 .field span,.sec-label{display:block;font-size:15px;color:var(--sub);margin:0 0 4px}
-.field input{width:100%;font:inherit;font-size:20px;padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.field input,.field select{width:100%;font:inherit;font-size:20px;padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);min-height:54px}
 .seg{display:flex;border:2px solid var(--ink);border-radius:10px;overflow:hidden;margin-bottom:16px}
 .seg button{flex:1;padding:12px 0;border:0;background:var(--surface);font-size:17px;font-weight:700}
 .seg button+button{border-left:2px solid var(--ink)}
@@ -180,7 +180,73 @@ th{color:var(--sub)}
     <div class="seal"><small>1ポイント</small><b>1秒</b></div>
     <div><h1>1秒体感トレーニング</h1><p>左で1秒、右で1秒。感覚だけでタップ</p></div>
   </div>
-  <label class="field"><span>氏名</span><input id="name" autocomplete="off" placeholder="例：山田"></label>
+  <label class="field"><span>氏名</span><select id="name" autocomplete="off">
+    <option value="" disabled selected>集荷者を選択してください</option>
+    <optgroup label="1係">
+      <option value="フルヤナオキ">フルヤナオキ</option>
+      <option value="キトウノブマサ">キトウノブマサ</option>
+      <option value="フクダテツヤ">フクダテツヤ</option>
+      <option value="クロキケンジ">クロキケンジ</option>
+      <option value="オクノリュウイチ">オクノリュウイチ</option>
+      <option value="ツカモトテッペイ">ツカモトテッペイ</option>
+      <option value="クロキリョウスケ">クロキリョウスケ</option>
+      <option value="オオガリョウヤ">オオガリョウヤ</option>
+      <option value="ハギワラケイスケ">ハギワラケイスケ</option>
+      <option value="アンドウリュウジ">アンドウリュウジ</option>
+      <option value="スズキトシミツ">スズキトシミツ</option>
+      <option value="イトウリョウゴ">イトウリョウゴ</option>
+      <option value="スズキマサミ">スズキマサミ</option>
+      <option value="カネコタケシ">カネコタケシ</option>
+      <option value="ツルマルユウタ">ツルマルユウタ</option>
+      <option value="クサヅミアキラ">クサヅミアキラ</option>
+      <option value="トミタタカユキ">トミタタカユキ</option>
+      <option value="オグラケン">オグラケン</option>
+      <option value="マツバラユタカ">マツバラユタカ</option>
+      <option value="ミヤザキコウダイ">ミヤザキコウダイ</option>
+      <option value="ヤマモトタカヒロ">ヤマモトタカヒロ</option>
+      <option value="ドイユウマ">ドイユウマ</option>
+      <option value="アワキ エイト">アワキ エイト</option>
+      <option value="コトウトモカズ">コトウトモカズ</option>
+      <option value="シバタ トモヤ">シバタ トモヤ</option>
+      <option value="イシカワソウタ">イシカワソウタ</option>
+      <option value="ニシヤマヒロノリ">ニシヤマヒロノリ</option>
+    </optgroup>
+    <optgroup label="2係">
+      <option value="イイダタクヤ">イイダタクヤ</option>
+      <option value="スギヤマノブヒコ">スギヤマノブヒコ</option>
+      <option value="オキタナオユキ">オキタナオユキ</option>
+      <option value="マツダタカシ">マツダタカシ</option>
+      <option value="イマイヤスヒロ">イマイヤスヒロ</option>
+      <option value="コンドウタカユキ">コンドウタカユキ</option>
+      <option value="ナカヤマヒロキ">ナカヤマヒロキ</option>
+      <option value="オノウエマサアキ">オノウエマサアキ</option>
+      <option value="フルイサトシ">フルイサトシ</option>
+      <option value="スズキアキヒロ">スズキアキヒロ</option>
+      <option value="マツオカツミ">マツオカツミ</option>
+      <option value="ウチヤマ ノボル">ウチヤマ ノボル</option>
+      <option value="ヤノアキノリ">ヤノアキノリ</option>
+      <option value="アラマキユウジ">アラマキユウジ</option>
+      <option value="トクダヒデキ">トクダヒデキ</option>
+      <option value="オチアイダイスケ">オチアイダイスケ</option>
+      <option value="タカハシユウスケ">タカハシユウスケ</option>
+      <option value="クラタトシヤ">クラタトシヤ</option>
+      <option value="スギモト ショウキ">スギモト ショウキ</option>
+      <option value="イナトシヤス">イナトシヤス</option>
+      <option value="ミウラシンイチ">ミウラシンイチ</option>
+      <option value="カツノジュンジ">カツノジュンジ</option>
+      <option value="ヤザキヨウスケ">ヤザキヨウスケ</option>
+      <option value="ナガエ アツキ">ナガエ アツキ</option>
+      <option value="イマムラユウト">イマムラユウト</option>
+      <option value="シゲタハヤト">シゲタハヤト</option>
+      <option value="ナカシマカズオ">ナカシマカズオ</option>
+      <option value="キシガミアヤキ">キシガミアヤキ</option>
+      <option value="イノウエハルト">イノウエハルト</option>
+    </optgroup>
+    <optgroup label="3係">
+      <option value="ヤマグチナオユキ">ヤマグチナオユキ</option>
+      <option value="ヤマシタジュン">ヤマシタジュン</option>
+    </optgroup>
+  </select></label>
   <span class="sec-label">ポイント数</span>
   <div class="seg" id="nSeg"><button data-n="10" class="on">10</button><button data-n="20">20</button></div>
   <div class="best" id="bestBox"><span>自己ベスト</span><b id="bestVal">—</b></div>
@@ -266,7 +332,7 @@ let nPoints=10, state=null, last=null, lastPractice=false;
 /* ---------- 保存 ---------- */
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
 function save(a){try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){alert('履歴を保存できませんでした。ブラウザのプライベートモードを解除してください。')}}
-try{$('#name').value=localStorage.getItem(NKEY)||''}catch(e){}
+try{const saved=localStorage.getItem(NKEY)||'';const savedNorm=saved.normalize('NFKC').trim();const match=[...$('#name').options].find(o=>o.value&&o.value.normalize('NFKC').trim()===savedNorm);if(match)$('#name').value=match.value}catch(e){}
 
 /* ---------- 共通 ---------- */
 const rnd=n=>Math.floor(Math.random()*n);
@@ -286,7 +352,7 @@ async function copyText(t){
   ta.remove();ok?toast('コピーしました'):prompt('下の文字を長押ししてコピーしてください',t);
 }
 function getName(){const n=$('#name').value.trim();try{localStorage.setItem(NKEY,n)}catch(e){}return n}
-function myRecords(){const n=$('#name').value.trim();return load().filter(r=>!n||r.name===n)}
+function myRecords(){const n=$('#name').value.normalize('NFKC').trim();return load().filter(r=>!n||String(r.name||'').normalize('NFKC').trim()===n)}
 
 /* ---------- 判定 ---------- */
 const JUDGE=[
@@ -324,7 +390,7 @@ const valHtml=p=>p.val+(p.unit?`<small>${p.unit}</small>`:'');
 /* ---------- ホーム ---------- */
 function renderBest(){const rs=myRecords();$('#bestVal').textContent=rs.length?Math.max(...rs.map(r=>r.score))+' 点':'—'}
 renderBest();
-$('#name').addEventListener('input',renderBest);
+$('#name').addEventListener('change',renderBest);
 $('#nSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   nPoints=+b.dataset.n;$('#nSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>start(b.dataset.practice==='1',nPoints)));
@@ -333,7 +399,7 @@ $('#btnHistory').addEventListener('click',()=>{getName();renderHistory();show('h
 /* ---------- 実施 ---------- */
 function start(practice,n){
   const name=getName();
-  if(!name){alert('氏名を入力してください');$('#name').focus();return}
+  if(!name){alert('氏名を選択してください');$('#name').focus();return}
   lastPractice=practice;
   state={practice,n,name,i:0,side:null,t0:0,lock:true,points:makePoints(n),tL:[],tR:[],taps:[],score:0,combo:0,maxCombo:0,timers:[],quizSet:pickQuiz(n),q:0,qc:0,qMiss:0};
   $('#quiz').hidden=true;
@@ -541,7 +607,7 @@ $('#btnTsv').addEventListener('click',()=>{
 $('#btnClear').addEventListener('click',()=>{
   const name=$('#name').value.trim();
   if(!confirm(name?`${name}さんの履歴をすべて削除します。元に戻せません。`:'全員の履歴をすべて削除します。元に戻せません。'))return;
-  save(load().filter(r=>name&&r.name!==name));renderHistory();renderBest();toast('削除しました');
+  const key=name.normalize('NFKC').trim();save(load().filter(r=>key&&String(r.name||'').normalize('NFKC').trim()!==key));renderHistory();renderBest();toast('削除しました');
 });
 
 let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
