@@ -247,7 +247,7 @@ th{color:var(--sub)}
       <option value="ヤマシタジュン">ヤマシタジュン</option>
     </optgroup>
   </select></label>
-  <span class="sec-label">ポイント数</span>
+  <span class="sec-label">問題数</span>
   <div class="seg" id="nSeg"><button data-n="10" class="on">10</button><button data-n="20">20</button></div>
   <div class="best" id="bestBox"><span>自己ベスト</span><b id="bestVal">—</b></div>
   <button class="mode practice" data-practice="1"><b>練習</b><span>1秒で一周するリングが出ます。1秒の長さを目で覚える。記録は残りません。</span></button>
@@ -368,16 +368,32 @@ function rankOf(mae,qMiss){const k=mae<=.07?0:mae<=.12?1:mae<=.20?2:3;return ['S
 const LET='ABCDEFGHJKLMNPRSTUVWXY';
 const digits=n=>Array.from({length:n},()=>rnd(10)).join('');
 function nearDigits(v){const a=[...v],idx=a.map((c,i)=>/\d/.test(c)?i:-1).filter(i=>i>=0),i=pick(idx);let d;do{d=String(rnd(10))}while(d===a[i]);a[i]=d;return a.join('')}
+/* 左右：LH/RH・R/L・数字+R/L（8R/8Lなど）を出題 */
+const flipLR=v=>v.replace(/[RL]/,c=>c==='R'?'L':'R');
+function genLR(){
+  const t=rnd(3);
+  if(t===0)return pick(['LH','RH']);
+  if(t===1)return pick(['R','L']);
+  return (1+rnd(9))+pick(['R','L']);
+}
+function nearLR(v){
+  const m=v.match(/^(\d)([RL])$/);
+  if(!m)return flipLR(v);
+  let d;do{d=String(1+rnd(9))}while(d===m[1]);
+  const r=rnd(3);
+  return r===0?flipLR(v):r===1?d+m[2]:d+(m[2]==='R'?'L':'R');
+}
 const CATS=[
-  {label:'品番',gen:()=>pick(LET)+digits(3),near:v=>Math.random()<.3?pick(LET)+v.slice(1):nearDigits(v)},
+  /* 品番（4文字）は除外 */
   {label:'数量',unit:'個',gen:()=>String(2+rnd(47)),near:v=>(Math.random()<.4&&v.length===2&&v[1]!=='0')?v[1]+v[0]:String(Math.max(1,+v+pick([-3,-2,-1,1,2,3])))},
   {label:'色',gen:()=>pick(['赤','橙','黄','緑','青','紺','白','灰','黒','茶'])},
-  {label:'ロット',gen:()=>digits(4),near:nearDigits},
+  /* ロット（4桁）は除外 */
   {label:'向き',gen:()=>pick(['↑','→','↓','←'])},
-  {label:'左右',gen:()=>pick(['LH','RH'])}
+  {label:'左右',gen:genLR,near:nearLR}
 ];
 function choicesOf(p){
-  const c=CATS[p.ci],seen=new Set([p.val]),out=[p.val],want=c.label==='左右'?2:4;let g=0;
+  const c=CATS[p.ci],seen=new Set([p.val]),out=[p.val],want=(c.label==='左右'&&!/\d/.test(p.val))?2:4;let g=0;
+  if(c.label==='左右'){const f=flipLR(p.val);seen.add(f);out.push(f)}
   while(out.length<want&&g++<300){const v=c.near?c.near(p.val):c.gen();if(!seen.has(v)){seen.add(v);out.push(v)}}
   for(let i=out.length-1;i>0;i--){const j=rnd(i+1);[out[i],out[j]]=[out[j],out[i]]}
   return out;
